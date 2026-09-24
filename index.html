@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ela ve Koca Patti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-cream:#FFF6E5;
+    --sky:#8FD3F4;
+    --sky-2:#C9ECFB;
+    --grass:#8BC34A;
+    --grass-2:#6FA83A;
+    --ela:#FF8A65;
+    --ela-dark:#E8734F;
+    --patti:#A9714B;
+    --patti-dark:#8A5A38;
+    --yellow:#FFD966;
+    --yellow-dark:#F0C138;
+    --pink:#F7A6C8;
+    --purple:#B39DDB;
+    --ink:#3A3352;
+    --white:#FFFFFF;
+    --radius-lg: 32px;
+    --radius-md: 22px;
+    --radius-sm: 14px;
+    --shadow: 0 8px 0 rgba(58,51,82,0.15);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent; user-select:none;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background:
+      radial-gradient(circle at 15% 8%, #FFE3D6 0%, transparent 42%),
+      radial-gradient(circle at 88% 4%, #D9F0FF 0%, transparent 40%),
+      linear-gradient(180deg, var(--sky) 0%, var(--sky-2) 45%, var(--bg-cream) 45%);
+    color:var(--ink);
+    overflow:hidden;
+    touch-action: manipulation;
+  }
+  .blob{
+    position:absolute; border-radius:50%; filter:blur(30px); opacity:0.55; z-index:0; pointer-events:none;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', cursive; }
+  #app{ position:relative; width:100vw; height:100vh; max-width:560px; margin:0 auto; overflow:hidden; }
+
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    padding:18px;
+    overflow:hidden;
+  }
+  .screen.active{ display:flex; }
+
+  /* ---------- Reusable bits ---------- */
+  .cloud{
+    position:absolute; background:#fff; border-radius:50%; opacity:0.9;
+  }
+  .hills{
+    position:absolute; left:0; right:0; bottom:0; height:120px;
+    background: var(--grass);
+    border-top-left-radius: 50% 40px;
+    border-top-right-radius: 50% 40px;
+  }
+  .hills.back{ background:var(--grass-2); height:100px; opacity:0.85; }
+
+  .icon-btn{
+    position:absolute; top:16px; left:16px;
+    width:52px; height:52px; border-radius:50%;
+    background:var(--white); border:none; box-shadow:var(--shadow);
+    font-size:24px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:20;
+  }
+  .icon-btn:active{ transform:translateY(4px); box-shadow:0 3px 0 rgba(58,51,82,0.15); }
+
+  .mascot-badge{
+    position:absolute; top:16px; right:16px; z-index:20;
+    width:52px; height:52px; border-radius:50%;
+    background:var(--white); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+  }
+
+  .big-btn{
+    font-family:'Baloo 2', cursive;
+    font-size:22px; font-weight:700; color:#fff;
+    border:none; border-radius:100px;
+    padding:16px 36px;
+    background:var(--ela);
+    box-shadow: 0 8px 0 var(--ela-dark);
+    cursor:pointer;
+  }
+  .big-btn:active{ transform:translateY(6px); box-shadow:0 2px 0 var(--ela-dark); }
+  .big-btn.green{ background:var(--grass); box-shadow:0 8px 0 var(--grass-2); }
+  .big-btn.green:active{ box-shadow:0 2px 0 var(--grass-2); }
+
+  /* ---------- START SCREEN ---------- */
+  #screen-start{ justify-content:center; }
+  .title-wrap{ text-align:center; z-index:5; margin-top:-40px;}
+  .title-wrap h1{
+    font-size:44px; margin:0; color:var(--ela-dark);
+    text-shadow: 3px 3px 0 #fff, 0 6px 0 rgba(58,51,82,0.12);
+    line-height:1.05;
+  }
+  .title-wrap h1 span{ display:block; font-size:30px; color:var(--patti-dark); }
+  .start-chars{ display:flex; gap:18px; justify-content:center; margin: 18px 0 28px; }
+  .start-chars svg{ width:110px; height:130px; filter: drop-shadow(0 6px 0 rgba(0,0,0,0.08)); animation: bob 2.4s ease-in-out infinite; }
+  .start-chars svg:nth-child(2){ animation-delay:0.4s; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-10px);} }
+
+  /* ---------- CHARACTER SELECT ---------- */
+  #screen-select{ justify-content:center; }
+  .select-title{ font-size:26px; margin: 6px 0 20px; color:var(--ink); text-align:center; z-index:5;}
+  .char-cards{ display:flex; gap:16px; z-index:5; }
+  .char-card{
+    background:#fff; border-radius:var(--radius-lg); width:150px; padding:16px 12px 18px;
+    box-shadow:var(--shadow); text-align:center; cursor:pointer; border:5px solid transparent;
+    transition: transform .12s;
+  }
+  .char-card:active{ transform: scale(0.96); }
+  .char-card.picked{ border-color:var(--yellow); }
+  .char-card svg{ width:100px; height:120px; }
+  .char-card .name{ font-family:'Baloo 2'; font-size:19px; margin-top:8px; }
+
+  /* ---------- MAIN MENU ---------- */
+  #screen-menu{ justify-content:flex-start; padding-top:90px; }
+  .menu-header{ text-align:center; z-index:5; }
+  .menu-header .hi{ font-size:16px; font-weight:800; color:var(--patti-dark); }
+  .menu-header h2{ font-size:26px; margin:2px 0 20px; }
+  .menu-grid{
+    z-index:5; display:grid; grid-template-columns: 1fr 1fr; gap:16px; width:100%; max-width:420px;
+  }
+  .game-tile{
+    background:#fff; border-radius:var(--radius-lg); padding:18px 10px; text-align:center;
+    box-shadow: var(--shadow); cursor:pointer; border:none;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .game-tile:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(58,51,82,0.15); }
+  .game-tile .emoji{ font-size:44px; }
+  .game-tile .label{ font-family:'Baloo 2'; font-size:17px; color:var(--ink); }
+  .tile-1{ background:#FFE8DC; } .tile-2{ background:#E4F7E0; }
+  .tile-3{ background:#FFF3CC; } .tile-4{ background:#E3EEFF; }
+
+  /* ---------- GAME HEADER (shared) ---------- */
+  .game-title{ font-size:22px; margin:6px 0 4px; z-index:5; text-align:center; }
+  .game-sub{ font-size:14px; color:#726B8C; margin-bottom:10px; z-index:5; text-align:center;}
+
+  /* ---------- MATCH GAME ---------- */
+  #screen-match{ justify-content:flex-start; padding-top:80px; background:var(--bg-cream); }
+  .match-grid{
+    z-index:5; display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;
+    width:100%; max-width:380px; margin-top:6px;
+  }
+  .mcard{
+    aspect-ratio:1/1; border-radius:16px; background:linear-gradient(180deg,#FFB199,#FF8A65);
+    box-shadow: 0 5px 0 var(--ela-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size:30px; cursor:pointer; position:relative;
+  }
+  .mcard .face{ display:none; }
+  .mcard.flipped{ background:#fff; box-shadow:0 5px 0 #ddd; }
+  .mcard.flipped .face{ display:block; }
+  .mcard.flipped .back{ display:none; }
+  .mcard.matched{ background:#E4F7E0; box-shadow:0 5px 0 #9FD98A; opacity:0.9; }
+  .mcard .back{ font-size:26px; }
+
+  /* ---------- RUNNER GAME ---------- */
+  #screen-runner{ padding-top:74px; background:var(--bg-cream); }
+  #runnerCanvas{ z-index:5; border-radius:20px; box-shadow:var(--shadow); background:#CDEBFA; touch-action:none; }
+  .runner-score{ z-index:5; font-family:'Baloo 2'; font-size:20px; margin:8px 0; color:var(--patti-dark); }
+
+  /* ---------- LEVEL SELECT (shared by all games) ---------- */
+  #screen-levels{ justify-content:center; background:var(--bg-cream); }
+  .level-cards{ z-index:5; display:flex; flex-direction:column; gap:14px; width:100%; max-width:320px; }
+  .level-card{
+    display:flex; align-items:center; gap:14px; background:#fff; border-radius:var(--radius-md);
+    padding:16px 18px; box-shadow:var(--shadow); cursor:pointer; border:none; text-align:left;
+  }
+  .level-card:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(58,51,82,0.15); }
+  .level-card .lv-icon{ font-size:32px; width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; }
+  .level-card.easy .lv-icon{ background:#E4F7E0; }
+  .level-card.medium .lv-icon{ background:#FFF3CC; }
+  .level-card.hard .lv-icon{ background:#FFE0E0; }
+  .level-card .lv-text{ flex:1; }
+  .level-card .lv-name{ font-family:'Baloo 2'; font-size:18px; }
+  .level-card .lv-stars{ font-size:13px; color:#A79FBF; }
+
+  /* ---------- COLORING GAME ---------- */
+  #screen-color{ padding-top:74px; background:var(--bg-cream); }
+  #colorSvgWrap{ z-index:5; background:linear-gradient(180deg,#EAF7FF,#FFFFFF); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:10px; }
+  #colorSvgWrap svg [data-paintable] { cursor:pointer; stroke:#3A3352; stroke-width:3; transition: fill 0.15s; }
+  .palette{ z-index:5; display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; justify-content:center; max-width:360px; }
+  .swatch{ width:38px; height:38px; border-radius:50%; border:4px solid #fff; box-shadow:var(--shadow); cursor:pointer; }
+  .swatch.active{ border-color:var(--ink); }
+  .mute-btn{
+    position:absolute; top:16px; right:16px; z-index:20;
+    width:52px; height:52px; border-radius:50%; background:var(--white); border:none;
+    box-shadow:var(--shadow); font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .mute-btn:active{ transform:translateY(4px); box-shadow:0 3px 0 rgba(58,51,82,0.15); }
+  .level-badge{
+    position:absolute; top:22px; left:78px; z-index:20; background:#fff; box-shadow:var(--shadow);
+    border-radius:100px; padding:6px 14px; font-family:'Baloo 2'; font-size:14px; color:var(--patti-dark);
+  }
+
+  /* ---------- PUZZLE GAME ---------- */
+  #screen-puzzle{ padding-top:74px; background:var(--bg-cream); }
+  .puzzle-row{ z-index:5; display:flex; gap:14px; justify-content:center; margin:8px 0; flex-wrap:wrap; }
+  .animal-chip{
+    width:64px; height:64px; border-radius:18px; background:#fff; box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; font-size:32px; cursor:pointer;
+  }
+  .animal-chip.selected{ box-shadow:0 0 0 4px var(--yellow), var(--shadow); }
+  .animal-chip.placed{ opacity:0.25; pointer-events:none; }
+  .home-chip{
+    width:64px; height:64px; border-radius:18px; background:#EDE7F6; border:3px dashed #B39DDB;
+    display:flex; align-items:center; justify-content:center; font-size:30px; opacity:0.55; cursor:pointer;
+  }
+  .home-chip.filled{ opacity:1; background:#E4F7E0; border:3px solid #9FD98A; }
+  .shake{ animation: shake .35s; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);} }
+
+  /* ---------- WIN OVERLAY ---------- */
+  .win-overlay{
+    position:absolute; inset:0; background:rgba(58,51,82,0.35);
+    display:none; align-items:center; justify-content:center; z-index:50;
+  }
+  .win-overlay.active{ display:flex; }
+  .win-card{
+    background:#fff; border-radius:var(--radius-lg); padding:32px 26px; text-align:center;
+    box-shadow:0 12px 0 rgba(0,0,0,0.15); max-width:300px;
+  }
+  .win-card .stars{ font-size:40px; margin-bottom:6px; }
+  .win-card h3{ font-size:24px; margin:0 0 4px; color:var(--ela-dark); }
+  .win-card p{ margin:0 0 18px; color:#726B8C; font-weight:700; }
+  .win-btns{ display:flex; gap:10px; justify-content:center; }
+  .win-btns button{
+    font-family:'Baloo 2'; font-weight:700; border:none; border-radius:100px; padding:12px 20px; cursor:pointer;
+  }
+  .win-btns .again{ background:var(--yellow); box-shadow:0 6px 0 var(--yellow-dark); }
+  .win-btns .home{ background:var(--grass); color:#fff; box-shadow:0 6px 0 var(--grass-2); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ START ============ -->
+  <div class="screen active" id="screen-start">
+    <div class="blob" style="width:180px;height:180px;background:#FFB199;top:-40px;left:-50px;"></div>
+    <div class="blob" style="width:150px;height:150px;background:#B39DDB;top:60px;right:-40px;"></div>
+    <div class="hills back" style="height:90px;"></div>
+    <div class="hills"></div>
+    <div class="title-wrap">
+      <h1>Ela ve<span>Koca Patti</span></h1>
+    </div>
+    <div class="start-chars">
+      <svg viewBox="0 0 120 140" id="startEla"></svg>
+      <svg viewBox="0 0 120 140" id="startPatti"></svg>
+    </div>
+    <button class="big-btn" style="z-index:5" onclick="goTo('screen-select')">▶ Oyna</button>
+  </div>
+
+  <!-- ============ CHARACTER SELECT ============ -->
+  <div class="screen" id="screen-select">
+    <div class="hills back" style="height:90px;"></div>
+    <div class="hills"></div>
+    <h2 class="select-title">Kiminle oynamak istersin?</h2>
+    <div class="char-cards">
+      <div class="char-card" id="cardEla" onclick="pickCharacter('ela')">
+        <svg viewBox="0 0 120 140" id="selectEla"></svg>
+        <div class="name">Ela</div>
+      </div>
+      <div class="char-card" id="cardPatti" onclick="pickCharacter('patti')">
+        <svg viewBox="0 0 120 140" id="selectPatti"></svg>
+        <div class="name">Koca Patti</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN MENU ============ -->
+  <div class="screen" id="screen-menu">
+    <div class="blob" style="width:160px;height:160px;background:#FFD966;top:-30px;right:-40px;"></div>
+    <div class="blob" style="width:130px;height:130px;background:#8FD3F4;bottom:20px;left:-40px;"></div>
+    <button class="icon-btn" onclick="goTo('screen-select')">⬅</button>
+    <div class="mascot-badge" id="menuMascot">🐻</div>
+    <div class="menu-header">
+      <div class="hi">Merhaba!</div>
+      <h2>Ne oynayalım?</h2>
+    </div>
+    <div class="menu-grid">
+      <button class="game-tile tile-1" onclick="openLevels('match')">
+        <span class="emoji">🍓</span><span class="label">Eşleştirme</span>
+      </button>
+      <button class="game-tile tile-2" onclick="openLevels('runner')">
+        <span class="emoji">🔢</span><span class="label">Sayı Koşusu</span>
+      </button>
+      <button class="game-tile tile-3" onclick="openLevels('color')">
+        <span class="emoji">🎨</span><span class="label">Boyama</span>
+      </button>
+      <button class="game-tile tile-4" onclick="openLevels('puzzle')">
+        <span class="emoji">🧩</span><span class="label">Bulmaca</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ MATCH GAME ============ -->
+  <div class="screen" id="screen-match">
+    <button class="icon-btn" onclick="goTo('screen-levels')">⬅</button>
+    <div class="level-badge" id="matchLevelBadge">Kolay</div>
+    <h2 class="game-title">Eşini Bul</h2>
+    <div class="game-sub">Aynı meyveleri bul!</div>
+    <div class="match-grid" id="matchGrid"></div>
+    <div class="win-overlay" id="matchWin">
+      <div class="win-card">
+        <div class="stars">⭐⭐⭐</div>
+        <h3>Harika!</h3>
+        <p>Hepsini buldun!</p>
+        <div class="win-btns">
+          <button class="again" onclick="startMatchLevel(currentMatchLevel)">🔁 Tekrar</button>
+          <button class="home" onclick="goTo('screen-levels')">🎯 Seviyeler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RUNNER GAME (Sayı Koşusu) ============ -->
+  <div class="screen" id="screen-runner">
+    <button class="icon-btn" onclick="stopRunner(); goTo('screen-levels')">⬅</button>
+    <div class="level-badge" id="runnerLevelBadge">Kolay</div>
+    <h2 class="game-title">Sayı Koşusu</h2>
+    <div class="runner-score" id="runnerTarget">🎯 Hedef: 1 / 5</div>
+    <canvas id="runnerCanvas" width="380" height="280"></canvas>
+    <div class="game-sub" style="margin-top:10px;">Doğru sayıyı topla, zıplamak için dokun!</div>
+    <div class="win-overlay" id="runnerWin">
+      <div class="win-card">
+        <div class="stars">⭐⭐⭐</div>
+        <h3>Süpersin!</h3>
+        <p>Tüm sayıları topladın!</p>
+        <div class="win-btns">
+          <button class="again" onclick="startRunnerLevel(currentRunnerLevel)">🔁 Tekrar</button>
+          <button class="home" onclick="goTo('screen-levels')">🎯 Seviyeler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LEVEL SELECT (shared) ============ -->
+  <div class="screen" id="screen-levels">
+    <button class="icon-btn" onclick="goTo('screen-menu')">⬅</button>
+    <h2 class="game-title" id="levelsTitle">Seviye Seç</h2>
+    <div class="game-sub">Bir seviye seç!</div>
+    <div class="level-cards">
+      <button class="level-card easy" onclick="chooseLevel('easy')">
+        <span class="lv-icon">🌤️</span>
+        <span class="lv-text"><span class="lv-name">Kolay</span><br><span class="lv-stars" id="lvDescEasy">⭐</span></span>
+      </button>
+      <button class="level-card medium" onclick="chooseLevel('medium')">
+        <span class="lv-icon">🌳</span>
+        <span class="lv-text"><span class="lv-name">Orta</span><br><span class="lv-stars" id="lvDescMedium">⭐⭐</span></span>
+      </button>
+      <button class="level-card hard" onclick="chooseLevel('hard')">
+        <span class="lv-icon">🏡</span>
+        <span class="lv-text"><span class="lv-name">Zor</span><br><span class="lv-stars" id="lvDescHard">⭐⭐⭐</span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ COLORING GAME ============ -->
+  <div class="screen" id="screen-color">
+    <button class="icon-btn" onclick="stopMusic(); goTo('screen-levels')">⬅</button>
+    <div class="level-badge" id="colorLevelBadge">Kolay</div>
+    <button class="mute-btn" id="muteBtn" onclick="toggleMusic()">🔊</button>
+    <h2 class="game-title">Boyama Zamanı</h2>
+    <div class="game-sub">Bir renk seç, sonra resme dokun!</div>
+    <div id="colorSvgWrap">
+      <svg viewBox="0 0 300 260" width="280" height="242" id="colorSvg"></svg>
+    </div>
+    <div class="palette" id="palette"></div>
+    <div class="win-overlay" id="colorWin">
+      <div class="win-card">
+        <div class="stars">⭐⭐⭐</div>
+        <h3>Ne güzel oldu!</h3>
+        <p>Resmi tamamladın!</p>
+        <div class="win-btns">
+          <button class="again" onclick="startColorLevel(currentColorLevel)">🔁 Tekrar</button>
+          <button class="home" onclick="stopMusic(); goTo('screen-levels')">🎯 Seviyeler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PUZZLE GAME ============ -->
+  <div class="screen" id="screen-puzzle">
+    <button class="icon-btn" onclick="goTo('screen-levels')">⬅</button>
+    <div class="level-badge" id="puzzleLevelBadge">Kolay</div>
+    <h2 class="game-title">Yuvasını Bul</h2>
+    <div class="game-sub">Hayvanı seç, sonra evine dokun!</div>
+    <div class="puzzle-row" id="puzzleAnimals"></div>
+    <div style="height:24px"></div>
+    <div class="puzzle-row" id="puzzleHomes"></div>
+    <div class="win-overlay" id="puzzleWin">
+      <div class="win-card">
+        <div class="stars">⭐⭐⭐</div>
+        <h3>Süpersin!</h3>
+        <p>Herkes evine döndü!</p>
+        <div class="win-btns">
+          <button class="again" onclick="startPuzzleLevel(currentPuzzleLevel)">🔁 Tekrar</button>
+          <button class="home" onclick="goTo('screen-levels')">🎯 Seviyeler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CHARACTER ART (inline SVG, original design - not third-party IP)
+   ============================================================ */
+function elaSvg(){
+  return `
+  <g>
+    <ellipse cx="60" cy="128" rx="26" ry="8" fill="#00000014"/>
+    <path d="M40 70 Q60 55 80 70 L84 120 Q60 132 36 120 Z" fill="#FF8A65"/>
+    <circle cx="60" cy="48" r="26" fill="#FFD9B3"/>
+    <path d="M34 42 Q60 10 86 42 Q86 30 60 24 Q34 30 34 42 Z" fill="#6B4A3A"/>
+    <circle cx="24" cy="44" r="9" fill="#6B4A3A"/>
+    <circle cx="96" cy="44" r="9" fill="#6B4A3A"/>
+    <circle cx="50" cy="50" r="3.4" fill="#3A3352"/>
+    <circle cx="70" cy="50" r="3.4" fill="#3A3352"/>
+    <path d="M52 60 Q60 66 68 60" stroke="#3A3352" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="45" cy="57" r="5" fill="#FFB199" opacity="0.7"/>
+    <circle cx="75" cy="57" r="5" fill="#FFB199" opacity="0.7"/>
+  </g>`;
+}
+function pattiSvg(){
+  return `
+  <g>
+    <ellipse cx="60" cy="130" rx="30" ry="8" fill="#00000014"/>
+    <ellipse cx="60" cy="95" rx="42" ry="38" fill="#A9714B"/>
+    <circle cx="24" cy="55" r="16" fill="#A9714B"/>
+    <circle cx="96" cy="55" r="16" fill="#A9714B"/>
+    <circle cx="24" cy="55" r="8" fill="#7A5236"/>
+    <circle cx="96" cy="55" r="8" fill="#7A5236"/>
+    <ellipse cx="60" cy="100" rx="24" ry="20" fill="#D9B18C"/>
+    <circle cx="48" cy="88" r="4" fill="#3A3352"/>
+    <circle cx="72" cy="88" r="4" fill="#3A3352"/>
+    <ellipse cx="60" cy="102" rx="7" ry="5" fill="#3A3352"/>
+    <path d="M50 112 Q60 118 70 112" stroke="#3A3352" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M30 118 Q60 132 90 118 L90 128 Q60 140 30 128 Z" fill="#FF8A65"/>
+  </g>`;
+}
+document.getElementById('startEla').innerHTML = elaSvg();
+document.getElementById('startPatti').innerHTML = pattiSvg();
+document.getElementById('selectEla').innerHTML = elaSvg();
+document.getElementById('selectPatti').innerHTML = pattiSvg();
+
+/* decorative clouds */
+function addClouds(container){
+  for(let i=0;i<3;i++){
+    const c = document.createElement('div');
+    c.className='cloud';
+    const size = 40 + Math.random()*40;
+    c.style.width = size+'px';
+    c.style.height = size*0.55+'px';
+    c.style.top = (10 + Math.random()*20)+'%';
+    c.style.left = (Math.random()*80)+'%';
+    container.appendChild(c);
+  }
+}
+document.querySelectorAll('.screen').forEach(s=>addClouds(s));
+
+/* ============================================================
+   NAVIGATION & LEVEL DISPATCH
+   ============================================================ */
+let currentCharacter = 'ela';
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  stopRunner();
+  if(id !== 'screen-color') stopMusic();
+}
+function pickCharacter(who){
+  currentCharacter = who;
+  document.getElementById('cardEla').classList.toggle('picked', who==='ela');
+  document.getElementById('cardPatti').classList.toggle('picked', who==='patti');
+  document.getElementById('menuMascot').textContent = who==='ela' ? '👧' : '🐻';
+  beep(660,0.08);
+  setTimeout(()=>goTo('screen-menu'), 220);
+}
+
+const LEVEL_NAME = { easy:'Kolay', medium:'Orta', hard:'Zor' };
+const GAME_TITLES = { match:'Eşini Bul', runner:'Sayı Koşusu', color:'Boyama Zamanı', puzzle:'Yuvasını Bul' };
+const LEVEL_DESC = {
+  match:  { easy:'⭐ 3 çift',        medium:'⭐⭐ 4 çift',        hard:'⭐⭐⭐ 6 çift' },
+  runner: { easy:'⭐ 1-5 say',       medium:'⭐⭐ 1-8 say',       hard:'⭐⭐⭐ 1-12 say' },
+  color:  { easy:'⭐ 5 şekil',       medium:'⭐⭐ 8 şekil',       hard:'⭐⭐⭐ 13 şekil' },
+  puzzle: { easy:'⭐ 3 hayvan',      medium:'⭐⭐ 4 hayvan',      hard:'⭐⭐⭐ 6 hayvan' },
+};
+let pendingGame = null;
+function openLevels(game){
+  pendingGame = game;
+  document.getElementById('levelsTitle').textContent = GAME_TITLES[game];
+  document.getElementById('lvDescEasy').textContent = LEVEL_DESC[game].easy;
+  document.getElementById('lvDescMedium').textContent = LEVEL_DESC[game].medium;
+  document.getElementById('lvDescHard').textContent = LEVEL_DESC[game].hard;
+  goTo('screen-levels');
+}
+function chooseLevel(level){
+  if(pendingGame==='match') startMatchLevel(level);
+  if(pendingGame==='runner') startRunnerLevel(level);
+  if(pendingGame==='color') startColorLevel(level);
+  if(pendingGame==='puzzle') startPuzzleLevel(level);
+}
+
+/* ============================================================
+   SOUND (tiny synth beeps, no external assets)
+   ============================================================ */
+let audioCtx;
+function beep(freq=440, dur=0.12, type='sine', vol=0.15){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function successChime(){ beep(523,0.12); setTimeout(()=>beep(659,0.12),120); setTimeout(()=>beep(784,0.18),240); }
+
+/* ---- tiny background music loop (self-synthesized, no external files) ---- */
+let musicEnabled = true;
+let musicTimer = null;
+let musicStep = 0;
+const MUSIC_NOTES = [392,440,523,440,523,587,523,440]; // gentle pentatonic-ish loop
+function startMusic(){
+  if(!musicEnabled || musicTimer) return;
+  musicStep = 0;
+  musicTimer = setInterval(()=>{
+    beep(MUSIC_NOTES[musicStep % MUSIC_NOTES.length], 0.5, 'triangle', 0.045);
+    musicStep++;
+  }, 450);
+}
+function stopMusic(){
+  if(musicTimer){ clearInterval(musicTimer); musicTimer = null; }
+}
+function toggleMusic(){
+  musicEnabled = !musicEnabled;
+  document.getElementById('muteBtn').textContent = musicEnabled ? '🔊' : '🔇';
+  if(musicEnabled) startMusic(); else stopMusic();
+}
+
+/* ============================================================
+   GAME 1: MATCH (Eşleştirme) — leveled
+   ============================================================ */
+const FRUITS = ['🍓','🍌','🍇','🍊','🍉','🍎'];
+const MATCH_PAIRS = { easy:3, medium:4, hard:6 };
+const MATCH_COLS  = { easy:3, medium:4, hard:4 };
+let currentMatchLevel = 'easy';
+let matchState = { first:null, second:null, lock:false, matchedCount:0, totalPairs:3 };
+function startMatchLevel(level){
+  currentMatchLevel = level;
+  document.getElementById('matchLevelBadge').textContent = LEVEL_NAME[level];
+  const pairs = MATCH_PAIRS[level];
+  const grid = document.getElementById('matchGrid');
+  grid.style.gridTemplateColumns = `repeat(${MATCH_COLS[level]}, 1fr)`;
+  grid.innerHTML = '';
+  document.getElementById('matchWin').classList.remove('active');
+  matchState = { first:null, second:null, lock:false, matchedCount:0, totalPairs:pairs };
+  const chosen = FRUITS.slice(0, pairs);
+  let deck = [...chosen, ...chosen];
+  deck.sort(()=>Math.random()-0.5);
+  deck.forEach((fruit, i)=>{
+    const card = document.createElement('div');
+    card.className = 'mcard';
+    card.dataset.fruit = fruit;
+    card.dataset.index = i;
+    card.innerHTML = `<span class="back">❓</span><span class="face">${fruit}</span>`;
+    card.onclick = ()=>flipCard(card);
+    grid.appendChild(card);
+  });
+  goTo('screen-match');
+}
+function flipCard(card){
+  if(matchState.lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  card.classList.add('flipped');
+  beep(500,0.06);
+  if(!matchState.first){ matchState.first = card; return; }
+  matchState.second = card;
+  matchState.lock = true;
+  if(matchState.first.dataset.fruit === matchState.second.dataset.fruit){
+    matchState.first.classList.add('matched');
+    matchState.second.classList.add('matched');
+    matchState.matchedCount++;
+    beep(700,0.1);
+    matchState.first = null; matchState.second = null; matchState.lock = false;
+    if(matchState.matchedCount === matchState.totalPairs){
+      setTimeout(()=>{ successChime(); document.getElementById('matchWin').classList.add('active'); }, 300);
+    }
+  } else {
+    setTimeout(()=>{
+      matchState.first.classList.remove('flipped');
+      matchState.second.classList.remove('flipped');
+      matchState.first = null; matchState.second = null; matchState.lock = false;
+    }, 700);
+  }
+}
+
+/* ============================================================
+   GAME 2: SAYI KOŞUSU (Number Run) — leveled, no fail-state
+   ============================================================ */
+const RUNNER_MAX   = { easy:5, medium:8, hard:12 };
+const RUNNER_SPEED = { easy:3.2, medium:4.2, hard:5.2 };
+let runnerAnim = null;
+let runnerState = null;
+let currentRunnerLevel = 'easy';
+
+function startRunnerLevel(level){
+  currentRunnerLevel = level;
+  document.getElementById('runnerLevelBadge').textContent = LEVEL_NAME[level];
+  document.getElementById('runnerWin').classList.remove('active');
+  goTo('screen-runner');
+  initRunnerGame(level);
+}
+function initRunnerGame(level){
+  const canvas = document.getElementById('runnerCanvas');
+  const ctx = canvas.getContext('2d');
+  const groundY = 220;
+  runnerState = {
+    ctx, canvas, groundY,
+    playerY: groundY, vy:0, jumping:false,
+    obstacles: [], jars:[], target:1, maxNum: RUNNER_MAX[level],
+    speed: RUNNER_SPEED[level], tick:0, finished:false
+  };
+  updateRunnerHud();
+  canvas.onpointerdown = ()=> jump();
+  loopRunner();
+}
+function updateRunnerHud(){
+  document.getElementById('runnerTarget').textContent = `🎯 Hedef: ${runnerState.target} / ${runnerState.maxNum}`;
+}
+function jump(){
+  if(!runnerState || runnerState.finished) return;
+  if(!runnerState.jumping){
+    runnerState.vy = -12;
+    runnerState.jumping = true;
+    beep(440,0.08);
+  }
+}
+function stopRunner(){ if(runnerAnim) cancelAnimationFrame(runnerAnim); }
+function finishRunner(){
+  const s = runnerState;
+  s.finished = true;
+  setTimeout(()=>{ successChime(); document.getElementById('runnerWin').classList.add('active'); }, 200);
+}
+function loopRunner(){
+  const s = runnerState;
+  if(!s || !document.getElementById('screen-runner').classList.contains('active') || s.finished) return;
+  const {ctx, canvas, groundY} = s;
+  s.tick++;
+
+  // physics
+  s.vy += 0.6;
+  s.playerY += s.vy;
+  if(s.playerY >= groundY){ s.playerY = groundY; s.vy = 0; s.jumping = false; }
+
+  // spawn decorative obstacles (jump-over fun, no fail on touch)
+  if(s.tick % 95 === 0){
+    s.obstacles.push({x:canvas.width+20, w:22, h:28});
+  }
+  // spawn number jars — bias toward the current target so kids don't wait too long
+  if(s.tick % 110 === 0){
+    const num = Math.random() < 0.55 ? s.target : (1 + Math.floor(Math.random()*s.maxNum));
+    const needsJump = Math.random() < 0.5;
+    s.jars.push({x:canvas.width+20, y: needsJump ? groundY-100 : groundY+2, num});
+  }
+
+  // move
+  s.obstacles.forEach(o=> o.x -= s.speed);
+  s.jars.forEach(j=> j.x -= s.speed);
+  s.obstacles = s.obstacles.filter(o=>o.x > -30);
+  s.jars = s.jars.filter(j=>j.x > -30);
+
+  // collect jars (numbers)
+  const playerX = 50, playerW = 34, playerH = 40;
+  s.jars = s.jars.filter(j=>{
+    const hit = playerX < j.x+18 && playerX+playerW > j.x && s.playerY < j.y+18 && s.playerY+playerH > j.y;
+    if(hit){
+      if(j.num === s.target){
+        beep(800,0.1);
+        s.target++;
+        updateRunnerHud();
+        if(s.target > s.maxNum){ finishRunner(); }
+      } else {
+        beep(280,0.12,'triangle',0.08);
+      }
+    }
+    return !hit;
+  });
+
+  // ---- draw ----
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#CDEBFA'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#8BC34A'; ctx.fillRect(0, groundY+40, canvas.width, 40);
+  ctx.fillStyle = '#6FA83A'; ctx.fillRect(0, groundY+40, canvas.width, 8);
+
+  // player
+  ctx.save();
+  ctx.translate(playerX, s.playerY);
+  ctx.fillStyle = currentCharacter==='ela' ? '#FF8A65' : '#A9714B';
+  ctx.beginPath();
+  ctx.ellipse(playerW/2, playerH/2, playerW/2, playerH/2, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#FFD9B3';
+  ctx.beginPath(); ctx.arc(playerW/2, 6, 10, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // obstacles (rocks — decorative, jump for fun, no penalty)
+  ctx.fillStyle = '#8D6E63';
+  s.obstacles.forEach(o=>{
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(o.x, groundY+40-o.h, o.w, o.h, 6) : ctx.rect(o.x, groundY+40-o.h, o.w, o.h);
+    ctx.fill();
+  });
+
+  // number jars
+  s.jars.forEach(j=>{
+    ctx.fillStyle = j.num === s.target ? '#FFD966' : '#B39DDB';
+    ctx.beginPath(); ctx.arc(j.x, j.y, 17, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3A3352';
+    ctx.font = 'bold 18px "Baloo 2", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(j.num, j.x, j.y+6);
+    ctx.textAlign = 'left';
+  });
+
+  runnerAnim = requestAnimationFrame(loopRunner);
+}
+
+/* ============================================================
+   GAME 3: COLORING (Boyama) — 3 levels, win detection, music
+   ============================================================ */
+const PALETTE = ['#FF8A65','#FFD966','#8BC34A','#8FD3F4','#B39DDB','#F7A6C8','#A9714B','#3A3352'];
+let activeColor = PALETTE[0];
+let currentColorLevel = 'easy';
+let colorTotal = 0;
+let colorFilled = 0;
+
+const NS = 'http://www.w3.org/2000/svg';
+
+function shape(tag, attrs, id){
+  const el = document.createElementNS(NS, tag);
+  Object.keys(attrs).forEach(k=> el.setAttribute(k, attrs[k]));
+  el.setAttribute('id', id);
+  el.setAttribute('data-paintable', '1');
+  el.setAttribute('fill', '#FFFFFF');
+  return el;
+}
+
+function sceneDefs(level){
+  const base = [
+    shape('circle', {cx:245, cy:45, r:26}, 'p_sun'),
+    shape('ellipse', {cx:65, cy:42, rx:32, ry:16}, 'p_cloud1'),
+    shape('path', {d:'M0 190 Q150 130 300 190 L300 260 L0 260 Z'}, 'p_hill'),
+    shape('rect', {x:136, y:150, width:16, height:55, rx:4}, 'p_trunk'),
+    shape('circle', {cx:144, cy:128, r:38}, 'p_leaves'),
+  ];
+  if(level==='easy') return base;
+
+  const medium = [...base,
+    shape('ellipse', {cx:112, cy:60, rx:22, ry:11}, 'p_cloud2'),
+    shape('circle', {cx:55, cy:225, r:11}, 'p_flower1'),
+    shape('circle', {cx:232, cy:230, r:11}, 'p_flower2'),
+  ];
+  if(level==='medium') return medium;
+
+  const hard = [...medium,
+    shape('path', {d:'M-10 235 Q90 200 180 228 T320 222 L320 260 L-10 260 Z'}, 'p_hillfront'),
+    shape('circle', {cx:176, cy:140, r:24}, 'p_leaves2'),
+    shape('polygon', {points:'200,170 230,138 260,170'}, 'p_roof'),
+    shape('rect', {x:205, y:170, width:50, height:46, rx:4}, 'p_house'),
+    shape('rect', {x:222, y:196, width:16, height:20, rx:2}, 'p_door'),
+  ];
+  return hard;
+}
+
+function startColorLevel(level){
+  currentColorLevel = level;
+  document.getElementById('colorLevelBadge').textContent = LEVEL_NAME[level];
+  document.getElementById('colorWin').classList.remove('active');
+
+  const svg = document.getElementById('colorSvg');
+  svg.innerHTML = '';
+  const shapes = sceneDefs(level);
+  colorTotal = shapes.length;
+  colorFilled = 0;
+  shapes.forEach(el=>{
+    el.onclick = ()=>{
+      const wasWhite = el.getAttribute('fill') === '#FFFFFF';
+      el.setAttribute('fill', activeColor);
+      beep(600,0.05);
+      if(wasWhite){
+        colorFilled++;
+        if(colorFilled === colorTotal){
+          setTimeout(()=>{
+            successChime();
+            stopMusic();
+            document.getElementById('colorWin').classList.add('active');
+          }, 250);
+        }
+      }
+    };
+    svg.appendChild(el);
+  });
+
+  // palette
+  const pal = document.getElementById('palette');
+  pal.innerHTML = '';
+  PALETTE.forEach((c,i)=>{
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (i===0?' active':'');
+    sw.style.background = c;
+    sw.onclick = ()=>{
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      activeColor = c;
+      beep(500,0.05);
+    };
+    pal.appendChild(sw);
+  });
+  activeColor = PALETTE[0];
+
+  goTo('screen-color');
+  document.getElementById('muteBtn').textContent = musicEnabled ? '🔊' : '🔇';
+  startMusic();
+}
+
+/* ============================================================
+   GAME 4: PUZZLE (Yuvasını Bul) — leveled
+   ============================================================ */
+const ANIMALS_ALL = [
+  {id:'rabbit', emoji:'🐰'},
+  {id:'bear', emoji:'🐻'},
+  {id:'cat', emoji:'🐱'},
+  {id:'dog', emoji:'🐶'},
+  {id:'frog', emoji:'🐸'},
+  {id:'lion', emoji:'🦁'},
+];
+const PUZZLE_COUNT = { easy:3, medium:4, hard:6 };
+let currentPuzzleLevel = 'easy';
+let puzzleSet = ANIMALS_ALL.slice(0,3);
+let puzzleSelected = null;
+let puzzlePlacedCount = 0;
+function startPuzzleLevel(level){
+  currentPuzzleLevel = level;
+  document.getElementById('puzzleLevelBadge').textContent = LEVEL_NAME[level];
+  puzzleSet = ANIMALS_ALL.slice(0, PUZZLE_COUNT[level]);
+  puzzleSelected = null; puzzlePlacedCount = 0;
+  document.getElementById('puzzleWin').classList.remove('active');
+  const animalsRow = document.getElementById('puzzleAnimals');
+  const homesRow = document.getElementById('puzzleHomes');
+  animalsRow.innerHTML = ''; homesRow.innerHTML = '';
+
+  const shuffledAnimals = [...puzzleSet].sort(()=>Math.random()-0.5);
+  shuffledAnimals.forEach(a=>{
+    const chip = document.createElement('div');
+    chip.className = 'animal-chip';
+    chip.textContent = a.emoji;
+    chip.dataset.id = a.id;
+    chip.onclick = ()=>{
+      if(chip.classList.contains('placed')) return;
+      document.querySelectorAll('.animal-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      puzzleSelected = chip;
+      beep(500,0.06);
+    };
+    animalsRow.appendChild(chip);
+  });
+
+  const shuffledHomes = [...puzzleSet].sort(()=>Math.random()-0.5);
+  shuffledHomes.forEach(a=>{
+    const home = document.createElement('div');
+    home.className = 'home-chip';
+    home.textContent = '🏠';
+    home.dataset.id = a.id;
+    home.onclick = ()=>{
+      if(!puzzleSelected || home.classList.contains('filled')) return;
+      if(puzzleSelected.dataset.id === home.dataset.id){
+        home.textContent = puzzleSelected.textContent;
+        home.classList.add('filled');
+        puzzleSelected.classList.add('placed');
+        puzzleSelected.classList.remove('selected');
+        beep(700,0.1);
+        puzzleSelected = null;
+        puzzlePlacedCount++;
+        if(puzzlePlacedCount === puzzleSet.length){
+          setTimeout(()=>{ successChime(); document.getElementById('puzzleWin').classList.add('active'); }, 300);
+        }
+      } else {
+        home.classList.add('shake');
+        beep(220,0.15,'sawtooth');
+        setTimeout(()=>home.classList.remove('shake'), 350);
+      }
+    };
+    homesRow.appendChild(home);
+  });
+  goTo('screen-puzzle');
+}
+</script>
+</body>
+</html>
